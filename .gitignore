@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+venv/
+.venv/
+.env
+*.step
+*.stp
+!docs/examples/*.step
+.vscode/
+.idea/

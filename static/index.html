@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dişli Stüdyosu</title>
+<link rel="icon" href="/static/app.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sheet:#F4F5F1;        /* pafta kağıdı */
+  --ink:#16232E;          /* çini mürekkebi */
+  --line:#C9CFC9;         /* çerçeve çizgisi */
+  --grid:#E3E7E2;         /* milimetrik ızgara */
+  --blue:#22589E;         /* çizim mavisi */
+  --red:#B4381F;          /* kontrol kırmızısı */
+  --steel:#96A0AA;
+  --mono:"IBM Plex Mono",monospace;
+  --sans:"Archivo",sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{
+  font-family:var(--sans);color:var(--ink);background:var(--sheet);
+  display:grid;grid-template-columns:340px 1fr;height:100vh;overflow:hidden;
+}
+/* ---------------- sol panel ---------------- */
+aside{
+  border-right:2px solid var(--ink);padding:26px 24px;display:flex;
+  flex-direction:column;gap:0;overflow-y:auto;background:var(--sheet);
+}
+.brand{border:2px solid var(--ink);padding:14px 16px;margin-bottom:26px}
+.brand h1{font-size:19px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.brand p{font-family:var(--mono);font-size:11px;color:var(--blue);margin-top:4px;letter-spacing:.06em}
+.field{margin-bottom:18px}
+.field label{
+  display:block;font-size:11px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:6px;color:var(--ink)
+}
+.inwrap{display:flex;border:1.5px solid var(--ink);background:#fff}
+.inwrap:focus-within{outline:2px solid var(--blue);outline-offset:-1px}
+.inwrap input{
+  flex:1;border:0;padding:10px 12px;font-family:var(--mono);font-size:15px;
+  background:transparent;color:var(--ink);min-width:0
+}
+.inwrap input:focus{outline:none}
+.unit{
+  font-family:var(--mono);font-size:11px;color:#6A7680;align-self:center;
+  padding:0 10px;border-left:1px solid var(--line)
+}
+.hint{font-family:var(--mono);font-size:10.5px;color:#6A7680;margin-top:5px}
+.seg{display:flex;border:1.5px solid var(--ink);background:#fff}
+.segbtn{
+  flex:1;padding:10px 6px;border:0;background:transparent;cursor:pointer;
+  font-family:var(--sans);font-weight:700;font-size:12px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--ink)
+}
+.segbtn+.segbtn{border-left:1.5px solid var(--ink)}
+.segbtn.active{background:var(--ink);color:#fff}
+.segbtn:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+button.gen{
+  margin-top:8px;width:100%;padding:14px;border:2px solid var(--ink);
+  background:var(--blue);color:#fff;font-family:var(--sans);font-weight:700;
+  font-size:14px;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
+  box-shadow:4px 4px 0 var(--ink);transition:transform .08s, box-shadow .08s
+}
+button.gen:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+button.gen:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--ink)}
+button.gen:disabled{opacity:.55;cursor:wait;transform:none}
+button.gen:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.err{
+  display:none;margin-top:14px;border:1.5px solid var(--red);color:var(--red);
+  font-family:var(--mono);font-size:12px;padding:10px 12px;background:#fff
+}
+.foot{margin-top:auto;padding-top:22px;font-family:var(--mono);font-size:10px;color:#8A929B}
+/* ---------------- çizim alanı ---------------- */
+main{position:relative;overflow:hidden;
+  background-image:
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px),
+    linear-gradient(#D4DAD4 1px,transparent 1px),
+    linear-gradient(90deg,#D4DAD4 1px,transparent 1px);
+  background-size:10px 10px,10px 10px,50px 50px,50px 50px;
+}
+#viewport{position:absolute;inset:0}
+#viewport canvas{display:block}
+.frame{position:absolute;inset:14px;border:2px solid var(--ink);pointer-events:none}
+/* uyarı bandı */
+.warn{
+  position:absolute;top:30px;left:50%;transform:translateX(-50%);
+  display:none;border:1.5px solid var(--red);background:#fff;color:var(--red);
+  font-family:var(--mono);font-size:12px;padding:9px 14px;max-width:70%;z-index:5
+}
+/* ---------------- antet (title block) ---------------- */
+.antet{
+  position:absolute;right:14px;bottom:14px;background:#fff;
+  border:2px solid var(--ink);width:340px;z-index:5
+}
+.antet .row{display:grid;grid-template-columns:1fr 1fr;border-top:1.5px solid var(--ink)}
+.antet .row:first-child{border-top:0}
+.cell{padding:7px 11px;border-left:1.5px solid var(--ink)}
+.cell:first-child{border-left:0}
+.cell .k{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#6A7680}
+.cell .v{font-family:var(--mono);font-size:14px;font-weight:600;margin-top:1px}
+.antet .title{
+  padding:8px 11px;font-weight:700;font-size:12px;letter-spacing:.1em;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center
+}
+.antet .title span:last-child{font-family:var(--mono);font-weight:500;font-size:10px;color:var(--blue)}
+a.dl{
+  display:block;text-align:center;padding:12px;background:var(--ink);color:#fff;
+  text-decoration:none;font-weight:700;font-size:12.5px;letter-spacing:.14em;
+  text-transform:uppercase;border-top:2px solid var(--ink)
+}
+a.dl:hover{background:var(--blue)}
+a.dl:focus-visible{outline:3px solid var(--red);outline-offset:-4px}
+a.dl.off{pointer-events:none;opacity:.45}
+/* mobil */
+@media (max-width:900px){
+  body{grid-template-columns:1fr;grid-template-rows:auto 1fr;overflow:auto;height:auto}
+  main{min-height:70vh}
+  aside{border-right:0;border-bottom:2px solid var(--ink)}
+  .antet{width:calc(100% - 28px)}
+}
+@media (prefers-reduced-motion:reduce){ .noanim{animation:none!important} }
+</style>
+</head>
+<body>
+
+<aside>
+  <div class="brand">
+    <h1>Dişli Stüdyosu</h1>
+    <p>EVOLVENT PROFİL · STEP ÇIKTI</p>
+  </div>
+
+  <div class="field">
+    <label>Dişli tipi</label>
+    <div class="seg" role="group" aria-label="Dişli tipi">
+      <button type="button" class="segbtn active" id="t-spur">Düz</button>
+      <button type="button" class="segbtn" id="t-ring">Halka</button>
+      <button type="button" class="segbtn" id="t-pair">Çift</button>
+      <button type="button" class="segbtn" id="t-ipair">İç Çift</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="module">Modül</label>
+    <div class="inwrap"><input id="module" type="number" step="0.1" min="0.1" value="2"><span class="unit">mm</span></div>
+  </div>
+  <div class="field">
+    <label for="teeth">Diş sayısı — z</label>
+    <div class="inwrap"><input id="teeth" type="number" step="1" min="6" value="20"><span class="unit">adet</span></div>
+    <div class="hint">20°'de z &lt; 17 → alttan kesilme riski</div>
+  </div>
+  <div class="field" id="f-z2p" style="display:none">
+    <label for="z2p">Karşı dişli — z2</label>
+    <div class="inwrap"><input id="z2p" type="number" step="1" min="6" value="40"><span class="unit">adet</span></div>
+  </div>
+  <div class="field">
+    <label for="width">Diş genişliği — b</label>
+    <div class="inwrap"><input id="width" type="number" step="0.5" min="0.5" value="15"><span class="unit">mm</span></div>
+  </div>
+  <div class="field" id="f-bore">
+    <label for="bore">Delik çapı</label>
+    <div class="inwrap"><input id="bore" type="number" step="0.5" min="0" value="10"><span class="unit">mm</span></div>
+    <div class="hint">0 = deliksiz gövde</div>
+  </div>
+  <div class="field" id="f-rim" style="display:none">
+    <label for="rim">Halka et kalınlığı</label>
+    <div class="inwrap"><input id="rim" type="number" step="0.5" min="0" value="0"><span class="unit">mm</span></div>
+    <div class="hint">0 = otomatik (3 × modül)</div>
+  </div>
+  <div class="field">
+    <label for="pa">Normal basınç açısı — αn</label>
+    <div class="inwrap"><input id="pa" type="number" step="0.5" min="14" max="25" value="20"><span class="unit">°</span></div>
+  </div>
+  <div class="field">
+    <label for="helix">Helis açısı — β</label>
+    <div class="inwrap"><input id="helix" type="number" step="0.5" min="-45" max="45" value="0"><span class="unit">°</span></div>
+    <div class="hint">0 = düz dişli · + sağ helis, − sol helis</div>
+  </div>
+  <div class="field" id="f-shift">
+    <label for="shift">Profil kaydırma — x</label>
+    <div class="inwrap"><input id="shift" type="number" step="0.05" min="-0.9" max="1" value="0"><span class="unit">·mn</span></div>
+    <div class="hint">+ undercut önler, dişi kalınlaştırır · − inceltir</div>
+  </div>
+  <div class="field" id="f-x2" style="display:none">
+    <label for="x2">Karşı dişli kaydırma — x2</label>
+    <div class="inwrap"><input id="x2" type="number" step="0.05" min="-0.9" max="1" value="0"><span class="unit">·mn</span></div>
+    <div class="hint">x1+x2 ≠ 0 → aks mesafesi değişir (§2.7.3)</div>
+  </div>
+
+  <button class="gen" id="gen">Dişliyi Üret</button>
+  <div class="err" id="err"></div>
+
+  <details id="strength" style="margin-top:22px;border:1.5px solid var(--ink);background:#fff">
+    <summary style="padding:11px 12px;font-weight:700;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">Mukavemet — ISO 6336</summary>
+    <div style="padding:12px;border-top:1.5px solid var(--line)">
+      <div class="field">
+        <label for="z2">Karşı dişli — z2</label>
+        <div class="inwrap"><input id="z2" type="number" step="1" min="6" value="40"><span class="unit">adet</span></div>
+      </div>
+      <div class="field">
+        <label for="torque">Moment — T1</label>
+        <div class="inwrap"><input id="torque" type="number" step="1" min="0.1" value="50"><span class="unit">Nm</span></div>
+      </div>
+      <div class="field">
+        <label for="rpm">Devir — n1</label>
+        <div class="inwrap"><input id="rpm" type="number" step="10" min="1" value="1450"><span class="unit">d/dk</span></div>
+      </div>
+      <div class="field">
+        <label for="mat">Malzeme</label>
+        <div class="inwrap"><select id="mat" style="flex:1;border:0;padding:10px 12px;font-family:var(--mono);font-size:13px;background:transparent">
+          <option value="C45">C45 ıslah</option>
+          <option value="42CrMo4">42CrMo4 ıslah</option>
+          <option value="16MnCr5" selected>16MnCr5 sementasyon</option>
+          <option value="18CrNiMo76">18CrNiMo7-6 sementasyon</option>
+          <option value="GG25">GG25 dökme demir</option>
+        </select></div>
+      </div>
+      <div class="field">
+        <label for="ka">Uygulama faktörü — KA</label>
+        <div class="inwrap"><select id="ka" style="flex:1;border:0;padding:10px 12px;font-family:var(--mono);font-size:13px;background:transparent">
+          <option value="1.0">1.00 — düzgün tahrik/yük</option>
+          <option value="1.25" selected>1.25 — hafif darbeli</option>
+          <option value="1.5">1.50 — orta darbeli</option>
+          <option value="1.75">1.75 — ağır darbeli</option>
+        </select></div>
+      </div>
+      <button class="gen" id="calc" style="margin-top:2px">Hesapla</button>
+      <div class="err" id="serr"></div>
+      <div id="sres" style="display:none;margin-top:12px;font-family:var(--mono);font-size:12px;line-height:1.9"></div>
+    </div>
+  </details>
+
+  <div class="foot">Fare: sürükle = döndür · teker = yakınlaş</div>
+</aside>
+
+<main>
+  <div id="viewport"></div>
+  <div class="frame"></div>
+  <div class="warn" id="warn"></div>
+
+  <div class="antet">
+    <div class="title"><span id="ptitle">Pafta 01 — Düz Dişli</span><span id="fname">—</span></div>
+    <div class="row">
+      <div class="cell"><div class="k">Taksimat Ø</div><div class="v" id="s-dp">—</div></div>
+      <div class="cell"><div class="k">Temel Ø</div><div class="v" id="s-db">—</div></div>
+    </div>
+    <div class="row">
+      <div class="cell"><div class="k">Diş üstü Ø</div><div class="v" id="s-dt">—</div></div>
+      <div class="cell"><div class="k">Diş dibi Ø</div><div class="v" id="s-dr">—</div></div>
+    </div>
+    <div class="row" id="row-pair1" style="display:none">
+      <div class="cell"><div class="k">Aks mesafesi aw</div><div class="v" id="s-aw">—</div></div>
+      <div class="cell"><div class="k">Çalışma açısı αwt</div><div class="v" id="s-awt">—</div></div>
+    </div>
+    <div class="row" id="row-pair2" style="display:none">
+      <div class="cell"><div class="k">Kavrama oranı εα</div><div class="v" id="s-ea">—</div></div>
+      <div class="cell"><div class="k">Toplam εγ · çevrim u</div><div class="v" id="s-eg">—</div></div>
+    </div>
+    <div class="row" id="row-shift" style="display:none">
+      <div class="cell"><div class="k">Profil kaydırma x</div><div class="v" id="s-x">—</div></div>
+      <div class="cell"><div class="k">Diş üstü kalınlığı sa</div><div class="v" id="s-sa">—</div></div>
+    </div>
+    <div class="row" id="row-helix" style="display:none">
+      <div class="cell"><div class="k">Alın modülü mt</div><div class="v" id="s-mt">—</div></div>
+      <div class="cell"><div class="k">Alın basınç açısı αt</div><div class="v" id="s-at">—</div></div>
+    </div>
+    <div class="row" id="row-outer" style="display:none">
+      <div class="cell"><div class="k">Dış Ø</div><div class="v" id="s-do">—</div></div>
+      <div class="cell"><div class="k">Et kalınlığı</div><div class="v" id="s-rim">—</div></div>
+    </div>
+    <div class="row" id="row-ctrl1" style="display:none">
+      <div class="cell"><div class="k" id="k-w">Span Wk</div><div class="v" id="s-w">—</div></div>
+      <div class="cell"><div class="k" id="k-m">Bilye ölçüsü M</div><div class="v" id="s-m">—</div></div>
+    </div>
+    <div class="row" id="row-ctrl2" style="display:none">
+      <div class="cell"><div class="k">Kiriş kalınlığı s̄</div><div class="v" id="s-sc">—</div></div>
+      <div class="cell"><div class="k">Kiriş yüksekliği h̄a</div><div class="v" id="s-hc">—</div></div>
+    </div>
+    <div class="row">
+      <div class="cell"><div class="k">Taksimat adımı p</div><div class="v" id="s-cp">—</div></div>
+      <div class="cell"><div class="k">Durum</div><div class="v" id="s-st" style="color:var(--blue)">Hazır</div></div>
+    </div>
+    <a class="dl off" id="dl" href="#" download>STEP İndir (.stp)</a>
+    <a class="dl off" id="rpt" href="#" style="background:var(--blue)">Hesap Raporu</a>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+// ---------- three.js sahnesi ----------
+const vp = document.getElementById("viewport");
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 5000);
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+vp.appendChild(renderer.domElement);
+
+scene.add(new THREE.AmbientLight(0xffffff, .55));
+const key = new THREE.DirectionalLight(0xffffff, .8); key.position.set(1,1,1.4); scene.add(key);
+const fill = new THREE.DirectionalLight(0xdfe8f2, .35); fill.position.set(-1,-.6,-1); scene.add(fill);
+
+let mesh = null, edges = null;
+const mat = new THREE.MeshStandardMaterial({color:0x96A0AA, metalness:.55, roughness:.42});
+const edgeMat = new THREE.LineBasicMaterial({color:0x16232E, transparent:true, opacity:.35});
+
+// basit yörünge kontrolü (sürükle-döndür, teker-zoom)
+let theta = 0.9, phi = 1.05, dist = 120, target = new THREE.Vector3(0,0,0);
+let dragging = false, px = 0, py = 0;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+let spin = !reduced;
+
+function applyCam(){
+  camera.position.set(
+    target.x + dist*Math.sin(phi)*Math.cos(theta),
+    target.y + dist*Math.sin(phi)*Math.sin(theta),
+    target.z + dist*Math.cos(phi));
+  camera.up.set(0,0,1);
+  camera.lookAt(target);
+}
+vp.addEventListener("pointerdown", e=>{dragging=true; spin=false; px=e.clientX; py=e.clientY; vp.setPointerCapture(e.pointerId);});
+vp.addEventListener("pointermove", e=>{
+  if(!dragging) return;
+  theta -= (e.clientX-px)*0.007;
+  phi   = Math.min(Math.PI-0.05, Math.max(0.05, phi + (e.clientY-py)*0.007));
+  px=e.clientX; py=e.clientY;
+});
+vp.addEventListener("pointerup", ()=>dragging=false);
+vp.addEventListener("wheel", e=>{e.preventDefault(); dist *= (1 + Math.sign(e.deltaY)*0.09); dist=Math.max(5,Math.min(3000,dist));},{passive:false});
+
+function resize(){
+  const w = vp.clientWidth, h = vp.clientHeight;
+  renderer.setSize(w,h); camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener("resize", resize); resize();
+
+(function loop(){
+  requestAnimationFrame(loop);
+  if(spin && !dragging) theta += 0.0035;
+  applyCam();
+  renderer.render(scene,camera);
+})();
+
+// ---------- API ----------
+const $ = id => document.getElementById(id);
+const num = id => parseFloat($(id).value);
+let lastGen = null, lastStrength = null;
+
+// dişli tipi seçimi
+let gearType = "spur";
+function setType(t){
+  gearType = t;
+  ["spur","ring","pair","ipair"].forEach(k => $("t-"+k).classList.toggle("active", t === k));
+  $("f-bore").style.display  = t !== "ring" ? "" : "none";
+  $("f-shift").style.display = t !== "ring" ? "" : "none";
+  $("f-rim").style.display   = (t === "ring" || t === "ipair") ? "" : "none";
+  $("f-z2p").style.display   = (t === "pair" || t === "ipair") ? "" : "none";
+  $("f-x2").style.display    = t === "pair" ? "" : "none";
+  if(t === "ipair") $("z2p").value = Math.max(num("z2p"), Math.round(num("teeth")) + 20);
+}
+$("t-spur").addEventListener("click", ()=>setType("spur"));
+$("t-ring").addEventListener("click", ()=>setType("ring"));
+$("t-pair").addEventListener("click", ()=>setType("pair"));
+$("t-ipair").addEventListener("click", ()=>setType("ipair"));
+
+function setMesh(data){
+  if(mesh){scene.remove(mesh); mesh.geometry.dispose();}
+  if(edges){scene.remove(edges); edges.geometry.dispose();}
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(data.vertices,3));
+  g.setIndex(data.faces);
+  g.computeVertexNormals();
+  g.center();
+  mesh = new THREE.Mesh(g, mat);
+  edges = new THREE.LineSegments(new THREE.EdgesGeometry(g, 25), edgeMat);
+  scene.add(mesh); scene.add(edges);
+  const r = g.boundingSphere ? g.boundingSphere.radius : 50;
+  dist = r*3.1; target.set(0,0,0);
+}
+
+async function generate(){
+  const btn = $("gen"), err = $("err"), warn = $("warn");
+  err.style.display="none"; warn.style.display="none";
+  btn.disabled = true; btn.textContent = "Hesaplanıyor…";
+  $("s-st").textContent = "Üretiliyor"; $("s-st").style.color = "var(--blue)";
+  try{
+    const res = await fetch("/api/generate",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        gear_type: gearType,
+        module:num("module"), teeth:Math.round(num("teeth")),
+        width:num("width"), bore:num("bore"), rim_width:num("rim"),
+        pressure_angle:num("pa"), helix_angle:num("helix"),
+        profile_shift:num("shift"),
+        mate_teeth:Math.round(num("z2p")), shift2:num("x2")
+      })
+    });
+    if(!res.ok){
+      const j = await res.json().catch(()=>({}));
+      let msg;
+      if(typeof j.detail === "string") msg = j.detail;
+      else if(Array.isArray(j.detail))
+        msg = j.detail.map(d => (d.loc||[]).slice(1).join(".")+": "+d.msg).join(" · ")
+              + " — Sunucu eski sürümde kalmış olabilir: durdur.bat çalıştırıp yeniden başlat.";
+      else msg = "Sunucuya ulaşılamadı veya beklenmedik hata.";
+      throw new Error(msg);
+    }
+    const j = await res.json();
+    setMesh(j.mesh);
+    $("s-dp").textContent = j.stats.d_pitch + " mm";
+    $("s-db").textContent = j.stats.d_base + " mm";
+    $("s-dt").textContent = j.stats.d_tip + " mm";
+    $("s-dr").textContent = j.stats.d_root + " mm";
+    $("s-cp").textContent = j.stats.circular_pitch + " mm";
+    lastGen = j;
+    const helical = j.helix_angle !== 0;
+    if(j.gear_type === "ring" || j.gear_type === "ipair"){
+      $("ptitle").textContent = j.gear_type === "ipair" ? "Pafta 01 — İç Dişli Çifti"
+        : (helical ? "Pafta 01 — Helis Halka Dişli" : "Pafta 01 — Halka Dişli");
+      $("row-outer").style.display = "";
+      $("s-do").textContent = j.stats.d_outer + " mm";
+      $("s-rim").textContent = num("rim") > 0 ? num("rim") + " mm" : (3*num("module")).toFixed(1) + " mm";
+    }else{
+      $("ptitle").textContent = j.gear_type === "pair" ? "Pafta 01 — Dişli Çifti"
+        : (helical ? "Pafta 01 — Helis Dişli" : "Pafta 01 — Düz Dişli");
+      $("row-outer").style.display = "none";
+    }
+    if(j.gear_type === "pair" || j.gear_type === "ipair"){
+      $("row-pair1").style.display = ""; $("row-pair2").style.display = "";
+      $("s-aw").textContent = j.stats.a_w + " mm";
+      $("s-awt").textContent = j.stats.alpha_wt + "°";
+      $("s-ea").textContent = j.stats.eps_alpha;
+      $("s-eg").textContent = j.stats.eps_gamma + " · " + j.stats.u;
+    }else{
+      $("row-pair1").style.display = "none"; $("row-pair2").style.display = "none";
+    }
+    $("rpt").classList.remove("off");
+    if(helical){
+      $("row-helix").style.display = "";
+      $("s-mt").textContent = j.stats.m_t + " mm";
+      $("s-at").textContent = j.stats.alpha_t + "°";
+    }else{
+      $("row-helix").style.display = "none";
+    }
+    if(j.control){
+      const c = j.control;
+      $("row-ctrl1").style.display = ""; $("row-ctrl2").style.display = "";
+      $("k-w").textContent = "Span W (k=" + c.zw + ")";
+      $("s-w").textContent = c.W_note ? "ölçülemez" : c.W + " mm";
+      $("k-m").textContent = "Bilye M (D=" + c.D + ")";
+      $("s-m").textContent = c.M_note ? "uygun değil" : (c.M !== undefined ? c.M + " mm" : "—");
+      $("s-sc").textContent = c.s_chord + " mm";
+      $("s-hc").textContent = c.h_chord + " mm";
+    }else{
+      $("row-ctrl1").style.display = "none"; $("row-ctrl2").style.display = "none";
+    }
+    if(j.gear_type !== "ring" && j.stats.x !== undefined && j.stats.x !== 0){
+      $("row-shift").style.display = "";
+      $("s-x").textContent = j.stats.x;
+      $("s-sa").textContent = j.stats.s_a !== undefined ? j.stats.s_a + " mm" : "—";
+    }else{
+      $("row-shift").style.display = "none";
+    }
+    $("s-st").textContent = "Hazır"; $("s-st").style.color = "var(--blue)";
+    $("fname").textContent = j.filename;
+    const dl = $("dl"); dl.classList.remove("off"); dl.href = "/api/download/" + j.id;
+    if(j.warning){warn.textContent = "⚠ " + j.warning; warn.style.display = "block";}
+  }catch(e){
+    err.textContent = e.message; err.style.display = "block";
+    $("s-st").textContent = "Hata"; $("s-st").style.color = "var(--red)";
+  }finally{
+    btn.disabled = false; btn.textContent = "Dişliyi Üret";
+  }
+}
+// ---------- mukavemet ----------
+async function calcStrength(){
+  const btn = $("calc"), serr = $("serr"), box = $("sres");
+  serr.style.display="none"; box.style.display="none";
+  if(gearType === "ring"){ serr.textContent = "Mukavemet hesabı şimdilik dış (düz/helis) dişli için."; serr.style.display="block"; return; }
+  btn.disabled = true; btn.textContent = "Hesaplanıyor…";
+  try{
+    const res = await fetch("/api/strength",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        module:num("module"), teeth:Math.round(num("teeth")), width:num("width"),
+        pressure_angle:num("pa"), helix_angle:num("helix"), profile_shift:num("shift"),
+        mate_teeth:Math.round(num("z2")), torque:num("torque"), speed:num("rpm"),
+        ka:parseFloat($("ka").value), material:$("mat").value
+      })
+    });
+    if(!res.ok){
+      const j = await res.json().catch(()=>({}));
+      throw new Error(typeof j.detail === "string" ? j.detail : "Parametreleri kontrol et.");
+    }
+    const j = await res.json();
+    lastStrength = j;
+    const ok = (v,lim)=> v>=lim ? "var(--blue)" : "var(--red)";
+    box.innerHTML =
+      `<b>${j.material}</b> · Ft=${j.Ft} N · v=${j.v} m/s · u=${j.u}<br>` +
+      `εα=${j.eps_alpha} · εβ=${j.eps_beta} · YFa=${j.YFa} · YSa=${j.YSa}<br>` +
+      `<b>Diş dibi:</b> σF=${j.sigma_F} / ${j.sigma_FG} N/mm² — ` +
+      `<b style="color:${ok(j.SF,1.4)}">SF=${j.SF}</b> (min 1.4)<br>` +
+      `<b>Yüzey:</b> σH=${j.sigma_H} / ${j.sigma_HG} N/mm² — ` +
+      `<b style="color:${ok(j.SH,1.0)}">SH=${j.SH}</b> (min 1.0)<br>` +
+      `<span style="color:#6A7680;font-size:10.5px">${j.note}</span>`;
+    box.style.display = "block";
+  }catch(e){
+    serr.textContent = e.message; serr.style.display = "block";
+  }finally{
+    btn.disabled = false; btn.textContent = "Hesapla";
+  }
+}
+$("calc").addEventListener("click", calcStrength);
+
+// ---------- hesap raporu ----------
+function makeReport(){
+  if(!lastGen){ return; }
+  const j = lastGen, s = j.stats, c = j.control, st = lastStrength;
+  const row = (k,v)=>`<tr><td>${k}</td><td>${v}</td></tr>`;
+  const typeName = {spur: j.helix_angle!==0?"Helis dişli":"Düz dişli",
+                    ring:"Halka (iç) dişli", pair:"Dişli çifti",
+                    ipair:"İç dişli çifti (pinyon + halka)"}[j.gear_type];
+  let h = `<h1>Dişli Stüdyosu — Hesap Raporu</h1>
+  <p class="meta">${new Date().toLocaleString("tr-TR")} · ${j.filename} · Kaynak: Jelaska, <i>Gears and Gear Drives</i> (Wiley 2012); ISO 6336 / DIN 3990</p>
+  <h2>1. Girdi Parametreleri</h2><table>` +
+  row("Dişli tipi", typeName) +
+  row("Normal modül mn", num("module")+" mm") +
+  row("Diş sayısı z1", Math.round(num("teeth"))) +
+  (j.gear_type==="pair"||j.gear_type==="ipair" ? row("Karşı dişli z2", Math.round(num("z2p"))) : "") +
+  row("Diş genişliği b", num("width")+" mm") +
+  row("Normal basınç açısı αn", num("pa")+"°") +
+  row("Helis açısı β", num("helix")+"°") +
+  (j.gear_type!=="ring" ? row("Profil kaydırma x1", num("shift")) : "") +
+  (j.gear_type==="pair" ? row("Profil kaydırma x2", num("x2")) : "") +
+  (j.gear_type==="ring" ? row("Halka et kalınlığı", (num("rim")||"otomatik (3·mn)")) : row("Delik çapı", num("bore")+" mm")) +
+  `</table><h2>2. Geometri</h2><table>` +
+  row("Taksimat dairesi d1", s.d_pitch+" mm") +
+  (s.d_pitch2!==undefined ? row("Taksimat dairesi d2", s.d_pitch2+" mm") : "") +
+  row("Diş üstü dairesi da", s.d_tip+" mm") +
+  row("Diş dibi dairesi df", s.d_root+" mm") +
+  row("Temel daire db", s.d_base+" mm") +
+  (s.d_outer!==undefined ? row("Dış çap", s.d_outer+" mm") : "") +
+  row("Taksimat adımı p", s.circular_pitch+" mm") +
+  (s.m_t!==undefined ? row("Alın modülü mt", s.m_t+" mm")+row("Alın basınç açısı αt", s.alpha_t+"°") : "") +
+  (s.s_a!==undefined ? row("Diş üstü kalınlığı sa", s.s_a+" mm") : "") +
+  (s.a_w!==undefined ?
+    row("Aks mesafesi aw", s.a_w+" mm (sıfır: "+s.a_0+" mm)") +
+    row("Çalışma basınç açısı αwt", s.alpha_wt+"°") +
+    row("Diş üstü kısaltma k", s.k) +
+    row("Kavrama oranı εα / εβ / εγ", s.eps_alpha+" / "+s.eps_beta+" / "+s.eps_gamma) +
+    row("Çevrim oranı u", s.u) : "") +
+  `</table>`;
+  if(c){
+    h += `<h2>3. Kontrol Ölçüleri (z1)</h2><table>` +
+      row("Span ölçüsü W ("+c.zw+" diş)", (c.W_note||c.W+" mm")) +
+      (c.M!==undefined ? row("Bilye ölçüsü M (D="+c.D+" mm)", (c.M_note||c.M+" mm")) : "") +
+      row("Kiriş diş kalınlığı s̄", c.s_chord+" mm") +
+      row("Kiriş yüksekliği h̄a", c.h_chord+" mm") + `</table>`;
+  }
+  if(st){
+    h += `<h2>${c?4:3}. Mukavemet — ISO 6336 (Method C)</h2><table>` +
+      row("Malzeme", st.material) +
+      row("Çevresel kuvvet Ft", st.Ft+" N") +
+      row("Çevre hızı v", st.v+" m/s") +
+      row("Form faktörü YFa / YSa", st.YFa+" / "+st.YSa) +
+      row("Diş dibi gerilmesi σF", st.sigma_F+" N/mm² (sınır "+st.sigma_FG+")") +
+      row("Diş dibi emniyeti SF", st.SF+" (min 1.4)") +
+      row("Yüzey basıncı σH", st.sigma_H+" N/mm² (sınır "+st.sigma_HG+")") +
+      row("Yüzey emniyeti SH", st.SH+" (min 1.0)") + `</table>
+      <p class="meta">${st.note}</p>`;
+  }
+  if(j.warning) h += `<p class="warn">⚠ ${j.warning}</p>`;
+  const w = window.open("", "_blank");
+  w.document.write(`<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8">
+  <title>Hesap Raporu</title><style>
+  body{font-family:Georgia,serif;color:#16232E;max-width:720px;margin:32px auto;padding:0 16px}
+  h1{font-size:20px;border-bottom:3px solid #16232E;padding-bottom:8px}
+  h2{font-size:15px;margin-top:26px}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  td{border:1px solid #9aa;padding:5px 9px}
+  td:first-child{width:55%;color:#333}
+  td:last-child{font-family:"Courier New",monospace;font-weight:bold}
+  .meta{font-size:11px;color:#667}
+  .warn{border:1.5px solid #B4381F;color:#B4381F;padding:9px 12px;font-size:12.5px}
+  @media print{ body{margin:8mm} }
+  </style></head><body>${h}
+  <script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></body></html>`);
+  w.document.close();
+}
+$("rpt").addEventListener("click", e=>{e.preventDefault(); makeReport();});
+
+$("gen").addEventListener("click", generate);
+document.querySelectorAll("input").forEach(i => i.addEventListener("keydown", e => {if(e.key==="Enter") generate();}));
+generate(); // açılışta varsayılan dişli
+</script>
+</body>
+</html>
