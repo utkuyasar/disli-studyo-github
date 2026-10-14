@@ -49,8 +49,8 @@ Browser (Three.js UI)  ──►  FastAPI  ──►  CadQuery + cq_gears  ─�
 Requires Python 3.11 or newer.
 
 ```bash
-git clone https://github.com/<your-username>/disli-studyo.git
-cd disli-studyo
+git clone https://github.com/utkuyasar/disli-studyo-github.git
+cd disli-studyo-github
 python -m venv .venv
 .venv\Scripts\activate          # Windows  (macOS/Linux: source .venv/bin/activate)
 pip install -r requirements.txt
